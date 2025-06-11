@@ -1,0 +1,7 @@
+{
+  "name": "IPA Pronounce AI",
+  "description": "An interactive web application to learn and practice International Phonetic Alphabet (IPA) symbols with AI-powered pronunciation feedback, example sentences, and image generation.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
