@@ -5,6 +5,7 @@ export interface IPASymbol {
   type: 'vowel' | 'consonant' | 'diphthong';
   exampleWord: string;
   description: string; // Articulation description
+  simplifiedDescription_es: string; // Simple Spanish description of how it sounds
   mouthShape?: 'open' | 'mid' | 'closed' | 'rounded' | 'spread' | 'neutral'; // For simple mouth viz
 }
 

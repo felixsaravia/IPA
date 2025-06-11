@@ -13,7 +13,6 @@ const parseJsonFromMarkdown = <T,>(text: string): T | null => {
     return JSON.parse(jsonStr) as T;
   } catch (e) {
     console.error("Failed to parse JSON response:", e, "Original text:", text);
-    // Try to find JSON within the string if it's not perfectly formatted
     const jsonMatch = jsonStr.match(/(\[.*\]|\{.*\})/s);
     if (jsonMatch && jsonMatch[0]) {
       try {
@@ -41,7 +40,7 @@ Return the sentences as a JSON array of strings. For example: ["Sentence 1.", "S
       model: GEMINI_MODEL_TEXT,
       contents: prompt,
       config: {
-        responseMimeType: "application/json", // Request JSON output
+        responseMimeType: "application/json",
         temperature: 0.7,
       }
     });
@@ -78,7 +77,7 @@ Assume the transcript is accurate. Be encouraging. Do not ask for audio. Output 
       model: GEMINI_MODEL_TEXT,
       contents: prompt,
       config: {
-        temperature: 0.5, // More factual feedback
+        temperature: 0.5, 
       }
     });
     return response.text;
@@ -91,7 +90,7 @@ Assume the transcript is accurate. Be encouraging. Do not ask for audio. Output 
 export const generateAIImageForWord = async (
   ai: GoogleGenAI,
   word: string
-): Promise<string> => { // Returns base64 image string
+): Promise<string> => { 
   try {
     const prompt = `Create a simple, clear, and contextually relevant illustrative image for the English word "${word}". 
 The image should be suitable for a language learning application. Focus on a single, easily recognizable subject related to the word. Photorealistic style.`;
@@ -99,16 +98,42 @@ The image should be suitable for a language learning application. Focus on a sin
     const response = await ai.models.generateImages({
         model: GEMINI_MODEL_IMAGE,
         prompt: prompt,
-        config: { numberOfImages: 1, outputMimeType: 'image/jpeg' }, // JPEG is often smaller
+        config: { numberOfImages: 1, outputMimeType: 'image/jpeg' },
     });
 
     if (response.generatedImages && response.generatedImages.length > 0 && response.generatedImages[0].image.imageBytes) {
-      return response.generatedImages[0].image.imageBytes; // This is already a base64 string
+      return response.generatedImages[0].image.imageBytes; 
     }
     throw new Error("No image generated or image data missing.");
 
   } catch (error) {
     console.error(`Error generating AI image for "${word}":`, error);
+    throw error;
+  }
+};
+
+export const getAIWordExplanation = async (
+  ai: GoogleGenAI,
+  word: string
+): Promise<string> => {
+  try {
+    const prompt = `Explain the English word "${word}" for a language learner. 
+Provide a simple definition and one very short, clear example sentence showing its usage. 
+The explanation should be concise and easy to understand.
+Output plain text. For example:
+Definition: A soft, warm fabric.
+Example: My new jacket is made of ${word}.`;
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: GEMINI_MODEL_TEXT,
+      contents: prompt,
+      config: {
+        temperature: 0.6,
+      }
+    });
+    return response.text;
+  } catch (error) {
+    console.error(`Error fetching AI explanation for word "${word}":`, error);
     throw error;
   }
 };

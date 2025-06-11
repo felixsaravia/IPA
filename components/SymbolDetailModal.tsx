@@ -15,9 +15,11 @@ interface SymbolDetailModalProps {
   onGenerateExamples: () => Promise<void>;
   onGenerateImage: () => Promise<void>;
   onGetFeedback: (transcript: string) => Promise<void>;
+  onGetWordExplanation: () => Promise<void>;
   aiExamples: string[];
   aiGeneratedImage: string | null; // base64 string or 'error'
   aiFeedback: string | null;
+  aiWordExplanation: string | null;
   isLoading: boolean;
   isPracticed: boolean;
   onTogglePracticed: (symbol: string) => void;
@@ -31,9 +33,11 @@ export const SymbolDetailModal: React.FC<SymbolDetailModalProps> = ({
   onGenerateExamples,
   onGenerateImage,
   onGetFeedback,
+  onGetWordExplanation,
   aiExamples,
   aiGeneratedImage,
   aiFeedback,
+  aiWordExplanation,
   isLoading,
   isPracticed,
   onTogglePracticed,
@@ -76,7 +80,7 @@ export const SymbolDetailModal: React.FC<SymbolDetailModalProps> = ({
     >
       <div 
         className="bg-slate-800 p-6 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-6 transform transition-all"
-        onClick={(e) => e.stopPropagation()} // Prevent click inside modal from closing it
+        onClick={(e) => e.stopPropagation()} 
       >
         {/* Header */}
         <div className="flex justify-between items-start">
@@ -98,7 +102,7 @@ export const SymbolDetailModal: React.FC<SymbolDetailModalProps> = ({
 
         {/* Core Info & Actions */}
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Left Column: Pronunciation & Visualization */}
+          {/* Left Column: Pronunciation & Articulation Details */}
           <div className="space-y-4">
             <button
               onClick={handlePlaySound}
@@ -110,12 +114,13 @@ export const SymbolDetailModal: React.FC<SymbolDetailModalProps> = ({
               </svg>
               <span>Play ({accent})</span>
             </button>
-            <div className="bg-slate-700 p-4 rounded-lg text-center">
-              <h3 className="text-sm font-semibold text-sky-300 mb-2">Mouth Articulation (Simplified)</h3>
+            
+            <div className="bg-slate-700 p-4 rounded-lg">
+              <h3 className="text-base font-semibold text-sky-300 mb-2">How to Pronounce: {symbolInfo.symbol}</h3>
               <MouthVisualization shape={symbolInfo.mouthShape || 'neutral'} />
-              <p className="text-xs text-slate-400 mt-2">{symbolInfo.description}</p>
-              <p className="text-xs text-slate-500 mt-1">(AI-generated detailed animation would appear here)</p>
+              <p className="text-sm text-slate-300 mt-2 whitespace-pre-wrap">{symbolInfo.description}</p>
             </div>
+
              <button
                 onClick={handleTogglePracticed}
                 className={`w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg transition-colors
@@ -132,7 +137,6 @@ export const SymbolDetailModal: React.FC<SymbolDetailModalProps> = ({
 
           {/* Right Column: AI Features & Practice */}
           <div className="space-y-4">
-             {/* Practice Section */}
             <div className="bg-slate-700 p-4 rounded-lg">
               <h3 className="text-sm font-semibold text-sky-300 mb-2">Practice Your Pronunciation</h3>
               {!isListening && (
@@ -157,13 +161,28 @@ export const SymbolDetailModal: React.FC<SymbolDetailModalProps> = ({
               {recognitionError && <p className="text-xs text-red-400 mt-2">Recording Error: {recognitionError}</p>}
             </div>
             
-            {/* AI Generated Content Area */}
             {isLoading && <div className="py-4"><LoadingIndicator message="AI is thinking..." /></div>}
 
             {aiFeedback && !isLoading && (
               <div className="bg-slate-700 p-4 rounded-lg">
-                <h3 className="text-sm font-semibold text-sky-300 mb-2">AI Feedback</h3>
+                <h3 className="text-sm font-semibold text-sky-300 mb-2">AI Pronunciation Feedback</h3>
                 <p className="text-xs text-slate-300 whitespace-pre-wrap">{aiFeedback}</p>
+              </div>
+            )}
+            
+            {/* AI Word Explanation */}
+            <button
+                onClick={onGetWordExplanation}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm disabled:opacity-50"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C13.18 6.062 14.12 7.008 15 7.5M4.5 6.075A48.342 48.342 0 019 5.25m3.75 3C13.18 7.94 14.12 6.992 15 6.5M15 9.75V14.25m0-4.495c1.126-.088 2.24-.163 3.342-.23M15 9.75c-.639 0-1.257.053-1.873.151" /></svg>
+                <span>Explain "{symbolInfo.exampleWord}"</span>
+            </button>
+            {aiWordExplanation && !isLoading && (
+              <div className="bg-slate-700 p-4 rounded-lg">
+                <h3 className="text-sm font-semibold text-sky-300 mb-2">Meaning of "{symbolInfo.exampleWord}":</h3>
+                <p className="text-xs text-slate-300 whitespace-pre-wrap">{aiWordExplanation}</p>
               </div>
             )}
             

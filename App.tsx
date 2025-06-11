@@ -6,7 +6,7 @@ import { SymbolDetailModal } from './components/SymbolDetailModal';
 import { IPA_SECTIONS, GEMINI_MODEL_TEXT, GEMINI_MODEL_IMAGE } from './constants';
 import type { IPASymbol, Accent, IPASectionName } from './types';
 import { GoogleGenAI } from "@google/genai";
-import { generateAIImageForWord, getAIExampleSentences, getAIPronunciationFeedback } from './services/geminiService';
+import { generateAIImageForWord, getAIExampleSentences, getAIPronunciationFeedback, getAIWordExplanation } from './services/geminiService';
 
 const App: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<IPASymbol | null>(null);
@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const [aiExamples, setAiExamples] = useState<string[]>([]);
   const [aiGeneratedImage, setAiGeneratedImage] = useState<string | null>(null);
   const [aiFeedback, setAiFeedback] = useState<string | null>(null);
+  const [aiWordExplanation, setAiWordExplanation] = useState<string | null>(null);
   const [practicedSymbols, setPracticedSymbols] = useState<Set<string>>(new Set());
   
   const [aiClient, setAiClient] = useState<GoogleGenAI | null>(null);
@@ -24,7 +25,6 @@ const App: React.FC = () => {
       setAiClient(new GoogleGenAI({ apiKey: process.env.API_KEY }));
     } else {
       console.error("API_KEY environment variable not set.");
-      // Potentially show an error to the user or disable AI features
     }
   }, []);
 
@@ -40,6 +40,7 @@ const App: React.FC = () => {
     setAiExamples([]);
     setAiGeneratedImage(null);
     setAiFeedback(null);
+    setAiWordExplanation(null);
   }, []);
 
   const handleCloseModal = useCallback(() => {
@@ -62,7 +63,9 @@ const App: React.FC = () => {
   const handleGenerateExamples = useCallback(async () => {
     if (!selectedSymbol || !aiClient) return;
     setIsLoadingModalContent(true);
-    setAiFeedback(null);
+    // setAiFeedback(null); // Keep other AI content if desired
+    // setAiGeneratedImage(null);
+    // setAiWordExplanation(null);
     try {
       const examples = await getAIExampleSentences(aiClient, selectedSymbol.symbol, selectedSymbol.exampleWord);
       setAiExamples(examples);
@@ -76,13 +79,15 @@ const App: React.FC = () => {
   const handleGenerateImage = useCallback(async () => {
     if (!selectedSymbol || !aiClient) return;
     setIsLoadingModalContent(true);
-    setAiFeedback(null);
+    // setAiFeedback(null);
+    // setAiExamples([]);
+    // setAiWordExplanation(null);
     try {
       const imageUrl = await generateAIImageForWord(aiClient, selectedSymbol.exampleWord);
       setAiGeneratedImage(imageUrl);
     } catch (error) {
       console.error("Error generating image:", error);
-      setAiGeneratedImage("error"); // Special value to indicate error
+      setAiGeneratedImage("error"); 
     }
     setIsLoadingModalContent(false);
   }, [selectedSymbol, aiClient]);
@@ -90,14 +95,31 @@ const App: React.FC = () => {
   const handleGetFeedback = useCallback(async (transcript: string) => {
     if (!selectedSymbol || !aiClient) return;
     setIsLoadingModalContent(true);
-    setAiExamples([]);
-    setAiGeneratedImage(null);
+    // setAiExamples([]);
+    // setAiGeneratedImage(null);
+    // setAiWordExplanation(null);
     try {
       const feedback = await getAIPronunciationFeedback(aiClient, selectedSymbol.symbol, selectedSymbol.exampleWord, transcript);
       setAiFeedback(feedback);
     } catch (error) {
       console.error("Error getting feedback:", error);
       setAiFeedback("Failed to get feedback. Please try again.");
+    }
+    setIsLoadingModalContent(false);
+  }, [selectedSymbol, aiClient]);
+
+  const handleGetWordExplanation = useCallback(async () => {
+    if (!selectedSymbol || !aiClient) return;
+    setIsLoadingModalContent(true);
+    // setAiFeedback(null);
+    // setAiExamples([]);
+    // setAiGeneratedImage(null);
+    try {
+      const explanation = await getAIWordExplanation(aiClient, selectedSymbol.exampleWord);
+      setAiWordExplanation(explanation);
+    } catch (error) {
+      console.error("Error getting word explanation:", error);
+      setAiWordExplanation("Failed to load explanation for the word.");
     }
     setIsLoadingModalContent(false);
   }, [selectedSymbol, aiClient]);
@@ -124,9 +146,11 @@ const App: React.FC = () => {
           onGenerateExamples={handleGenerateExamples}
           onGenerateImage={handleGenerateImage}
           onGetFeedback={handleGetFeedback}
+          onGetWordExplanation={handleGetWordExplanation}
           aiExamples={aiExamples}
           aiGeneratedImage={aiGeneratedImage}
           aiFeedback={aiFeedback}
+          aiWordExplanation={aiWordExplanation}
           isLoading={isLoadingModalContent}
           isPracticed={practicedSymbols.has(selectedSymbol.symbol)}
           onTogglePracticed={togglePracticedSymbol}
